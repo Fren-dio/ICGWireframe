@@ -1,17 +1,19 @@
 package ICG.laboratory_3.Editor;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.*;
 
 public class FigureEditToolBar extends JToolBar {
 
     FigureEditWindow editWindow;
-    FigureEditPanel editPanel;
+    FigureEditPanel figureEditPanel;
     Dimension windowDimension;
 
     public FigureEditToolBar(FigureEditWindow window, FigureEditPanel panel, Dimension dim) {
         this.editWindow = window;
-        this.editPanel = panel;
+        this.figureEditPanel = panel;
         this.windowDimension = dim;
 
         Dimension fixedSize = new Dimension((int) this.windowDimension.getWidth(), 100);
@@ -58,38 +60,135 @@ public class FigureEditToolBar extends JToolBar {
     void addRow1(JPanel row) {
         // число отрезков для каждого участка B-сплайна (≥ 1).
         row.add(new JLabel("N:"));
-        row.add(new JSpinner(new SpinnerNumberModel(4, 4, 100, 1)));
+        JSpinner N = new JSpinner(new SpinnerNumberModel(1, 1, 100, 1));
+        N.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                figureEditPanel.setNForBSpline((Integer)N.getValue());
+                figureEditPanel.updateImage();
+            }
+        });
+        row.add(N);
+
         // число опорных точек (не менее 4).
         row.add(new JLabel("K:"));
-        row.add(new JSpinner(new SpinnerNumberModel(1, 1, 100, 1)));
+        JSpinner K = new JSpinner(new SpinnerNumberModel(5, 4, 100, 1));
+        K.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                figureEditPanel.setPointsCount((Integer) K.getValue());
+            }
+        });
+        row.add(K);
+
         row.add(new JLabel("Main color red:"));
-        row.add(new JSpinner(new SpinnerNumberModel(128, 0, 255, 1)));
+        JSpinner colorRed = new JSpinner(new SpinnerNumberModel(128, 0, 255, 1));
+        figureEditPanel.setMainRed((Integer) colorRed.getValue());
+        figureEditPanel.repaint();
+        colorRed.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                figureEditPanel.setMainRed((Integer) colorRed.getValue());
+                figureEditPanel.repaint();
+            }
+        });
+        row.add(colorRed);
+
         row.add(new JLabel("B-spline red:"));
-        row.add(new JSpinner(new SpinnerNumberModel(0, 0, 255, 1)));
+        JSpinner colorRedBSpline = new JSpinner(new SpinnerNumberModel(128, 0, 255, 1));
+        figureEditPanel.setBSplineRed((Integer) colorRedBSpline.getValue());
+        figureEditPanel.repaint();
+        colorRedBSpline.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                figureEditPanel.setBSplineRed((Integer) colorRedBSpline.getValue());
+                figureEditPanel.repaint();
+            }
+        });
+        row.add(colorRedBSpline);
     }
 
     void addRow2(JPanel row) {
         // число отрезков по окружностям между соседними образующими (≥ 1).
         row.add(new JLabel("M1:"));
-        row.add(new JSpinner(new SpinnerNumberModel(4, 4, 100, 1)));
+        JSpinner M1 = new JSpinner(new SpinnerNumberModel(4, 4, 100, 1));
+        M1.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                figureEditPanel.setM1((Integer) M1.getValue());
+            }
+        });
+        row.add(M1);
         // число образующих
         row.add(new JLabel("M:"));
-        row.add(new JSpinner(new SpinnerNumberModel(10, 1, 100, 1)));
+        JSpinner M = new JSpinner(new SpinnerNumberModel(10, 1, 100, 1));
+        M.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                figureEditPanel.setM((Integer) M.getValue());
+            }
+        });
+        row.add(M);
+
         row.add(new JLabel("Main color green:"));
-        row.add(new JSpinner(new SpinnerNumberModel(128, 0, 255, 1)));
+        JSpinner colorGreen = new JSpinner(new SpinnerNumberModel(0, 0, 255, 1));
+        figureEditPanel.setMainGreen((Integer) colorGreen.getValue());
+        figureEditPanel.repaint();
+        colorGreen.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                figureEditPanel.setMainGreen((Integer) colorGreen.getValue());
+                figureEditPanel.repaint();
+            }
+        });
+        row.add(colorGreen);
+
         row.add(new JLabel("B-spline green:"));
-        row.add(new JSpinner(new SpinnerNumberModel(0, 0, 255, 1)));
+        JSpinner colorGreenBSpline = new JSpinner(new SpinnerNumberModel(128, 0, 255, 1));
+        figureEditPanel.setBSplineGreen((Integer) colorGreenBSpline.getValue());
+        figureEditPanel.repaint();
+        colorGreenBSpline.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                figureEditPanel.setBSplineGreen((Integer) colorGreenBSpline.getValue());
+                figureEditPanel.repaint();
+            }
+        });
+        row.add(colorGreenBSpline);
     }
 
     void addRow3(JPanel row) {
-        row.add(new JLabel("X of 7 point:"));
-        row.add(new JSpinner(new SpinnerNumberModel(4, 4, 100, 1)));
-        row.add(new JLabel("Y of 7 point:"));
-        row.add(new JSpinner(new SpinnerNumberModel(10, 1, 100, 1)));
+
+        row.add(new JLabel(""));
+        row.add(new JLabel(""));
+        row.add(new JLabel(""));
+        row.add(new JLabel(""));
+
         row.add(new JLabel("Main color blue:"));
-        row.add(new JSpinner(new SpinnerNumberModel(0, 0, 255, 1)));
+        JSpinner colorBlue = new JSpinner(new SpinnerNumberModel(255, 0, 255, 1));
+        figureEditPanel.setMainBlue((Integer) colorBlue.getValue());
+        figureEditPanel.repaint();
+        colorBlue.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                figureEditPanel.setMainBlue((Integer) colorBlue.getValue());
+                figureEditPanel.repaint();
+            }
+        });
+        row.add(colorBlue);
+
         row.add(new JLabel("B-spline blue:"));
-        row.add(new JSpinner(new SpinnerNumberModel(128, 0, 255, 1)));
+        JSpinner colorBlueBSpline = new JSpinner(new SpinnerNumberModel(0, 0, 255, 1));
+        figureEditPanel.setBSplineBlue((Integer) colorBlueBSpline.getValue());
+        figureEditPanel.repaint();
+        colorBlueBSpline.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                figureEditPanel.setBSplineBlue((Integer) colorBlueBSpline.getValue());
+                figureEditPanel.repaint();
+            }
+        });
+        row.add(colorBlueBSpline);
 
     }
 
@@ -129,11 +228,6 @@ public class FigureEditToolBar extends JToolBar {
         ZoomMinusBtn.setMaximumSize(btnDimension);
         row.add(ZoomMinusBtn);
 
-        JCheckBox addingBox = new JCheckBox("Add points mode", true);
-        addingBox.addActionListener(e -> {
-            this.editPanel.setElementsMode(!(this.editPanel.getElementsMode()));
-        });
-        row.add(addingBox);
     }
 
 }

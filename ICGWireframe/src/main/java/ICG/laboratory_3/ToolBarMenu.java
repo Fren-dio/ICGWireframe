@@ -5,17 +5,18 @@ import ICG.laboratory_3.Editor.FigureEditWindow;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
 
 public class ToolBarMenu extends JToolBar {
 
 
     private FrameWork frameWork;
 
-    private final ImagePanel imagePanel;
+    private ImagePanel imagePanel;
     private Dimension windowDimension;
+    private FigureEditWindow figureEditWindow;
 
-    public ToolBarMenu(FrameWork frameWork, ImagePanel imagePanel, Dimension windowDimension) {
-        this.imagePanel = imagePanel;
+    public ToolBarMenu(FrameWork frameWork, Dimension windowDimension) {
         this.frameWork = frameWork;
         this.windowDimension = windowDimension;
 
@@ -24,13 +25,16 @@ public class ToolBarMenu extends JToolBar {
         setMinimumSize(fixedSize);
         setMaximumSize(fixedSize);
 
+        this.figureEditWindow = new FigureEditWindow();
+
         this.setFloatable(false);
 
         addPointsEditor();
-
-
     }
 
+    void addImagePanel(ImagePanel imagePanel) {
+        this.imagePanel = imagePanel;
+    }
 
     void addPointsEditor() {
         JButton btn = new JButton("Figure editor");
@@ -48,8 +52,13 @@ public class ToolBarMenu extends JToolBar {
 
 
     void openEditorForm() {
-        new FigureEditWindow();
+        this.figureEditWindow.setVisible(true);
     }
+
+    List<Point> getInfoAboutBSplinePoints() {
+        return this.figureEditWindow.getInfoAboutBSplinePoints();
+    }
+
 
 
 }

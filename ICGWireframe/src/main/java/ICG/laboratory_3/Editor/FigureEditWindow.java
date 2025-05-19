@@ -10,6 +10,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.util.List;
 
 public class FigureEditWindow extends JFrame {
 
@@ -30,10 +31,14 @@ public class FigureEditWindow extends JFrame {
 
         addFigureEditPanel();
         addToolBarMenu();
-
         pack();
-        setVisible(true);
+        setVisible(false);
     }
+
+    void setVisib(boolean value) {
+        setVisible(value);
+    }
+
 
 
     void addFigureEditPanel() {
@@ -49,6 +54,10 @@ public class FigureEditWindow extends JFrame {
                 figureEditPanel.updateScrollBars();
             }
         });
+    }
+
+    public List<Point> getInfoAboutBSplinePoints() {
+        return figureEditPanel.getInfoAboutBSplinePoints();
     }
 
     void installScrollPane() {
@@ -91,7 +100,7 @@ public class FigureEditWindow extends JFrame {
                 (int)((screenDimension.getWidth() - windowDimension.getWidth()) / 2),
                 (int)((screenDimension.getHeight() - windowDimension.getHeight()) / 2)
         );
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     }
 
 }

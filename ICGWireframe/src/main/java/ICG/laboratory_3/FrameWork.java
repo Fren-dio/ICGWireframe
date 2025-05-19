@@ -7,6 +7,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.util.List;
 
 public class FrameWork extends JFrame {
 
@@ -29,8 +30,9 @@ public class FrameWork extends JFrame {
         setWindowDimension();
         setWindowLocation();
 
-        addImagePanel();
         addToolBarMenu();
+        addImagePanel();
+        this.toolBarMenu.addImagePanel(this.imagePanel);
 
         pack();
         setVisible(true);
@@ -60,10 +62,14 @@ public class FrameWork extends JFrame {
         add(scrollPane, BorderLayout.CENTER);
     }
 
+    List<Point> getInfoAboutBSplinePoints() {
+        return this.toolBarMenu.getInfoAboutBSplinePoints();
+    }
+
     void addToolBarMenu() {
         BoxLayoutUtils blUtils = new BoxLayoutUtils();
         JPanel utilsPanel = blUtils.createHorizontalPanel();
-        this.toolBarMenu = new ToolBarMenu(this, this.imagePanel, this.windowDimension);
+        this.toolBarMenu = new ToolBarMenu(this, this.windowDimension);
         utilsPanel.add(toolBarMenu);
         getContentPane().add(utilsPanel, "North");
     }
