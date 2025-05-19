@@ -1,5 +1,7 @@
 package ICG.laboratory_3;
 
+import ICG.laboratory_3.Editor.Elements.Circle;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -23,7 +25,7 @@ public class ImagePanel extends JPanel implements MouseListener, MouseMotionList
     // Параметры фигуры
     private List<Point> bSplinePoints = new ArrayList<>();
     private int M = 12; // Количество образующих
-    private int M1 = 1; // Число отрезков между образующими
+    private int M1 = 4; // Число отрезков между образующими
     private double zoom = 1.0;
     private final double cameraDistance = 5.0;
 
@@ -92,15 +94,16 @@ public class ImagePanel extends JPanel implements MouseListener, MouseMotionList
 
 
 
+    void setbSplinePoints(List<Point> bSplinePoints) {
+        this.bSplinePoints = bSplinePoints;
+        repaint();
+    }
 
 
     private void draw3DFigure(Graphics2D g2d) {
-        System.out.println("draw3DFigure called");
         bSplinePoints = new ArrayList<>();
-        bSplinePoints.add(new Point(0, 0));
-        bSplinePoints.add(new Point(3, 5));
-        bSplinePoints.add(new Point(6, 3));
-        bSplinePoints.add(new Point(9, 0));
+
+        bSplinePoints = frameWork.getInfoAboutBSplinePoints();
 
         if (bSplinePoints == null || bSplinePoints.size() < 4) return;
 
@@ -143,6 +146,38 @@ public class ImagePanel extends JPanel implements MouseListener, MouseMotionList
 
             for (int i = 1; i < generatrix.size(); i++) {
                 Point3D currentPoint = generatrix.get(i);
+                int currX = (int)((currentPoint.x - centerX) * scale + getWidth()/2);
+                int currY = (int)(getHeight()/2 - (currentPoint.y - centerY) * scale);
+
+                g2d.drawLine(prevX, prevY, currX, currY);
+                prevX = currX;
+                prevY = currY;
+            }
+        }
+
+
+        // Draw parallel circles (окружности)
+        g2d.setColor(Color.RED);
+        int pointsPerGeneratrix = surfacePoints.get(0).size();
+
+        // Рисуем окружности для каждой точки образующей
+        for (int pointIdx = 0; pointIdx < pointsPerGeneratrix; pointIdx+=M1) {
+            // Собираем все точки для текущей окружности
+            List<Point3D> circlePoints = new ArrayList<>();
+            for (List<Point3D> generatrix : surfacePoints) {
+                circlePoints.add(generatrix.get(pointIdx));
+            }
+
+            // Добавляем первую точку в конец, чтобы замкнуть окружность
+            circlePoints.add(circlePoints.get(0));
+
+            // Рисуем окружность, соединяя точки
+            Point3D firstPoint = circlePoints.get(0);
+            int prevX = (int)((firstPoint.x - centerX) * scale + getWidth()/2);
+            int prevY = (int)(getHeight()/2 - (firstPoint.y - centerY) * scale);
+
+            for (int i = 1; i < circlePoints.size(); i++) {
+                Point3D currentPoint = circlePoints.get(i);
                 int currX = (int)((currentPoint.x - centerX) * scale + getWidth()/2);
                 int currY = (int)(getHeight()/2 - (currentPoint.y - centerY) * scale);
 
@@ -203,7 +238,6 @@ public class ImagePanel extends JPanel implements MouseListener, MouseMotionList
             List<Point3D> generatrix3D = new ArrayList<>();
 
             for (Point2D.Double p : generatrixPoints) {
-                // Исходные координаты (вращение вокруг OZ)
                 double x = p.x * Math.cos(angle);
                 double y = p.x * Math.sin(angle);
                 double z = p.y;

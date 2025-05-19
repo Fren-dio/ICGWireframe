@@ -21,13 +21,16 @@ public class FigureEditWindow extends JFrame {
     private FigureEditToolBar figureEditToolBar;
     private JScrollPane scrollPane;
 
+    private ToolBarMenu toolBarMenu;
 
 
-    public FigureEditWindow() {
+    public FigureEditWindow(ToolBarMenu toolBarMenu) {
         super("Figure editor");
 
         setWindowDimension();
         setWindowLocation();
+
+        this.toolBarMenu = toolBarMenu;
 
         addFigureEditPanel();
         addToolBarMenu();
@@ -35,9 +38,7 @@ public class FigureEditWindow extends JFrame {
         setVisible(false);
     }
 
-    void setVisib(boolean value) {
-        setVisible(value);
-    }
+
 
 
 
@@ -59,6 +60,11 @@ public class FigureEditWindow extends JFrame {
     public List<Point> getInfoAboutBSplinePoints() {
         return figureEditPanel.getInfoAboutBSplinePoints();
     }
+
+    public void setbSplinePoints(List<Point> bSplinePoints) {
+        toolBarMenu.setbSplinePoints(bSplinePoints);
+    }
+
 
     void installScrollPane() {
         scrollPane = new JScrollPane();

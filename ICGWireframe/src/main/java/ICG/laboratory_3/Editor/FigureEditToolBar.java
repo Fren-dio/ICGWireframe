@@ -4,6 +4,8 @@ import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class FigureEditToolBar extends JToolBar {
 
@@ -205,6 +207,12 @@ public class FigureEditToolBar extends JToolBar {
         ApplyBtn.setPreferredSize(btnDimension);
         ApplyBtn.setMinimumSize(btnDimension);
         ApplyBtn.setMaximumSize(btnDimension);
+        ApplyBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                editWindow.setbSplinePoints(figureEditPanel.getInfoAboutBSplinePoints());
+            }
+        });
         row.add(ApplyBtn);
 
         JCheckBox checkBox = new JCheckBox("Auto change");

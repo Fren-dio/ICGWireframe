@@ -66,6 +66,10 @@ public class FrameWork extends JFrame {
         return this.toolBarMenu.getInfoAboutBSplinePoints();
     }
 
+    void setbSplinePoints(List<Point> bSplinePoints) {
+        imagePanel.setbSplinePoints(bSplinePoints);
+    }
+
     void addToolBarMenu() {
         BoxLayoutUtils blUtils = new BoxLayoutUtils();
         JPanel utilsPanel = blUtils.createHorizontalPanel();

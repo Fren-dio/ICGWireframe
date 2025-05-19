@@ -25,7 +25,7 @@ public class ToolBarMenu extends JToolBar {
         setMinimumSize(fixedSize);
         setMaximumSize(fixedSize);
 
-        this.figureEditWindow = new FigureEditWindow();
+        this.figureEditWindow = new FigureEditWindow(this);
 
         this.setFloatable(false);
 
@@ -59,6 +59,9 @@ public class ToolBarMenu extends JToolBar {
         return this.figureEditWindow.getInfoAboutBSplinePoints();
     }
 
+    public void setbSplinePoints(List<Point> bSplinePoints) {
+        frameWork.setbSplinePoints(bSplinePoints);
+    }
 
 
 }

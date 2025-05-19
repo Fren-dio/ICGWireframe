@@ -65,8 +65,19 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
 
 
     public List<Point> getInfoAboutBSplinePoints() {
+        System.out.println( "\ngetInfoAboutBSplinePoints:");
+        for (int i=0; i<bSplinePoints.size(); i++) {
+            System.out.println(bSplinePoints.get(i).x + " " + bSplinePoints.get(i).y);
+        }
+        System.out.println( "\n");
+        System.out.println( "\npoints:");
+        for (int i=0; i<circles.size(); i++) {
+            System.out.println(circles.get(i).center.x+ " " + circles.get(i).center.y);
+        }
+        System.out.println( "\n\n\n");
         return this.bSplinePoints;
     }
+
 
     public void setM(int value) {
         this.M = value;
@@ -145,11 +156,34 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
     private void setDefainPoints() {
         int halfHeight = (int)((this.windowDimension.getHeight())/2);
         int halfWight = (int)((this.windowDimension.getWidth())/2);
-        circles.add(new Circle(new Point(400, 220), circleRadius, nextCircleNumber++));
-        circles.add(new Circle(new Point(480, 430), circleRadius, nextCircleNumber++));
-        circles.add(new Circle(new Point(650, 410), circleRadius, nextCircleNumber++));
-        circles.add(new Circle(new Point(900, 200), circleRadius, nextCircleNumber++));
-        circles.add(new Circle(new Point(1200, 200), circleRadius, nextCircleNumber++));
+
+        // Параметры окна
+        int windowWidth = 800;
+        int windowHeight = 600;
+        double scale = 1.3; // Масштаб для вписывания в окно
+
+        // Автоматическое вычисление смещения
+        double max_X = 120 * scale; // Максимальный радиус (120 из ваших координат)
+        double max_Y = 420 * scale; // Общая высота (420 из ваших координат)
+
+        double offsetX = (windowWidth / 2) - (max_X / 2);
+        double offsetY = (windowHeight / 2) - (max_Y / 2);
+
+        // Основание вазы (дно → начало расширения)
+        circles.add(new Circle(new Point((int) (342), (int) (28)), circleRadius, nextCircleNumber++));
+        circles.add(new Circle(new Point((int) (202), (int) (54)), circleRadius, nextCircleNumber++));
+        circles.add(new Circle(new Point((int) (246), (int) (131)), circleRadius, nextCircleNumber++));
+        circles.add(new Circle(new Point((int) (474), (int) (134)), circleRadius, nextCircleNumber++));
+        circles.add(new Circle(new Point((int) (320), (int) (278)), circleRadius, nextCircleNumber++));
+        circles.add(new Circle(new Point((int) (456), (int) (308)), circleRadius, nextCircleNumber++));
+        circles.add(new Circle(new Point((int) (620), (int) (327)), circleRadius, nextCircleNumber++));
+        circles.add(new Circle(new Point((int) (545), (int) (461)), circleRadius, nextCircleNumber++));
+        circles.add(new Circle(new Point((int) (667), (int) (463)), circleRadius, nextCircleNumber++));
+        circles.add(new Circle(new Point((int) (758), (int) (487)), circleRadius, nextCircleNumber++));
+        circles.add(new Circle(new Point((int) (768), (int) (523)), circleRadius, nextCircleNumber++));
+        circles.add(new Circle(new Point((int) (852), (int) (560)), circleRadius, nextCircleNumber++));
+
+
         updateBSpline();
         repaint();
 
