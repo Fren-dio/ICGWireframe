@@ -36,14 +36,17 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
     private int M = 10;
     private int M1 = 4;
 
-
     private List<Point> bSplinePoints = new ArrayList<>();
-    private int splineSegments = 1; // Количество отрезков на участок сплайна
+    private int splineSegments = 1;
     private boolean showBSpline = true;
 
     private Circle draggedCircle = null;
     private Point dragOffset = null;
 
+    // Добавленные поля для масштабирования
+    private double scale = 1.0;
+    private static final double ZOOM_FACTOR = 0.1; // 10% увеличение/уменьшение
+    private ArrayList<Circle> originalCircles = new ArrayList<>(); // Храним оригинальные координаты
 
     public FigureEditPanel(JScrollPane scrollPane, FigureEditWindow figureEditWindow) {
         this.scrollPane = scrollPane;
@@ -53,14 +56,89 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
 
         setDefainPoints();
 
-        // Устанавливаем предпочтительный размер панели
         setPreferredSize(new Dimension((int) this.windowDimension.getWidth(), (int) this.windowDimension.getHeight()));
 
-        // Добавляем слушатели мыши
         addMouseListener(this);
         addMouseMotionListener(this);
 
         repaint();
+
+        saveOriginalCoordinates();
+    }
+
+    private void saveOriginalCoordinates() {
+        originalCircles.clear();
+        for (Circle circle : circles) {
+            originalCircles.add(new Circle(new Point(circle.center), circle.radius, circle.number));
+        }
+    }
+
+    // Методы для масштабирования
+    public void zoomIn() {
+        scale += ZOOM_FACTOR;
+        applyZoom();
+    }
+
+    public void zoomOut() {
+        scale = Math.max(0.1, scale - ZOOM_FACTOR); // Минимальный масштаб 10%
+        applyZoom();
+    }
+
+    public void resetZoom() {
+        scale = 1.0;
+        applyZoom();
+    }
+
+    private void applyZoom() {
+        // Восстанавливаем оригинальные координаты
+        for (int i = 0; i < originalCircles.size(); i++) {
+            circles.get(i).center.setLocation(originalCircles.get(i).center);
+        }
+
+        // Обновляем B-сплайн
+        updateBSpline();
+
+        // Перерисовываем панель
+        revalidate();
+        repaint();
+    }
+
+    private Point getOriginalPoint(Point scaledPoint) {
+        return new Point((int)(scaledPoint.x / scale), (int)(scaledPoint.y / scale));
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+
+        backgroundColor = new Color(26, 21, 63);
+        gridsLineColor = new Color(97, 97, 97);
+        mainLineColor = new Color(199, 208, 204);
+
+        super.paintComponent(g);
+
+        Graphics2D g2d = (Graphics2D) g.create();
+        g2d.setBackground(backgroundColor);
+        g2d.clearRect(0, 0, getWidth(), getHeight());
+
+        // Применяем масштабирование
+        g2d.scale(scale, scale);
+
+        int imageWidth = (int)(getWidth() / scale);
+        int imageHeight = (int)(getHeight() / scale);
+        int horizontalSteps = 20;
+        int horizontalStepSize = (int)(imageWidth/horizontalSteps);
+        int verticalStepSize = horizontalStepSize;
+        int verticalSteps = (int)(imageHeight/horizontalSteps);
+
+        drawLinesOnGrid(g2d, imageWidth, imageHeight, horizontalStepSize, verticalStepSize);
+        drawLinesForSteps(g2d, imageWidth, imageHeight, horizontalStepSize, verticalStepSize);
+
+        drawCircles(g2d);
+        drawLines(g2d);
+        drawNumbers(g2d);
+        drawBSpline(g2d);
+
+        g2d.dispose();
     }
 
 
@@ -69,13 +147,27 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
         for (int i=0; i<bSplinePoints.size(); i++) {
             System.out.println(bSplinePoints.get(i).x + " " + bSplinePoints.get(i).y);
         }
-        System.out.println( "\n");
-        System.out.println( "\npoints:");
-        for (int i=0; i<circles.size(); i++) {
-            System.out.println(circles.get(i).center.x+ " " + circles.get(i).center.y);
+        List<Point> centeredPoints = new ArrayList<>();
+
+        // Получаем центр панели (координата X центральной оси)
+        int centerX = getWidth() / 2;
+
+        // Преобразуем координаты относительно центральной оси
+        for (Point p : bSplinePoints) {
+            // Переводим в мировые координаты (учитывая масштаб)
+            int worldX = (int)(p.x / scale);
+            int worldY = (int)(p.y / scale);
+
+            // Смещаем относительно центральной оси
+            centeredPoints.add(new Point(worldX - centerX, worldY));
         }
-        System.out.println( "\n\n\n");
-        return this.bSplinePoints;
+
+        System.out.println("\nCentered BSpline points (relative to coordinate axis):");
+        for (Point p : centeredPoints) {
+            System.out.println(p.x + " " + p.y);
+        }
+
+        return centeredPoints;
     }
 
 
@@ -176,12 +268,12 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
         circles.add(new Circle(new Point((int) (474), (int) (134)), circleRadius, nextCircleNumber++));
         circles.add(new Circle(new Point((int) (320), (int) (278)), circleRadius, nextCircleNumber++));
         circles.add(new Circle(new Point((int) (456), (int) (308)), circleRadius, nextCircleNumber++));
-        circles.add(new Circle(new Point((int) (620), (int) (327)), circleRadius, nextCircleNumber++));
-        circles.add(new Circle(new Point((int) (545), (int) (461)), circleRadius, nextCircleNumber++));
-        circles.add(new Circle(new Point((int) (667), (int) (463)), circleRadius, nextCircleNumber++));
-        circles.add(new Circle(new Point((int) (758), (int) (487)), circleRadius, nextCircleNumber++));
-        circles.add(new Circle(new Point((int) (768), (int) (523)), circleRadius, nextCircleNumber++));
-        circles.add(new Circle(new Point((int) (852), (int) (560)), circleRadius, nextCircleNumber++));
+        circles.add(new Circle(new Point((int) (630), (int) (327)), circleRadius, nextCircleNumber++));
+        circles.add(new Circle(new Point((int) (630), (int) (490)), circleRadius, nextCircleNumber++));
+        circles.add(new Circle(new Point((int) (630), (int) (490)), circleRadius, nextCircleNumber++));
+        circles.add(new Circle(new Point((int) (620), (int) (520)), circleRadius, nextCircleNumber++));
+        circles.add(new Circle(new Point((int) (600), (int) (520)), circleRadius, nextCircleNumber++));
+        circles.add(new Circle(new Point((int) (580), (int) (520)), circleRadius, nextCircleNumber++));
 
 
         updateBSpline();
@@ -191,34 +283,6 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
 
     public void setNForBSpline(int value) {
         this.splineSegments = value;
-    }
-
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-
-        Graphics2D g2d = (Graphics2D) g.create();
-
-        int imageWidth = getWidth();
-        int imageHeight = getHeight();
-        int horizontalSteps = 20;
-        int horizontalStepSize = (int)(imageWidth/horizontalSteps);
-        int verticalStepSize = horizontalStepSize;
-        int verticalSteps = (int)(imageHeight/horizontalSteps);
-
-        backgroundColor = new Color(26, 21, 63);
-        gridsLineColor = new Color(97, 97, 97);
-        mainLineColor = new Color(199, 208, 204);
-
-        drawLinesOnGrid(g2d, imageWidth, imageHeight, horizontalStepSize, verticalStepSize);
-        drawLinesForSteps(g2d, imageWidth, imageHeight, horizontalStepSize, verticalStepSize);
-
-        drawCircles(g2d);
-        drawLines(g2d);
-        drawNumbers(g2d);
-        drawBSpline(g2d);
-
-        g2d.dispose();
     }
 
 
@@ -388,20 +452,24 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON1) { // левая кнопка мыши
+        if (e.getButton() == MouseEvent.BUTTON1) {
             if (this.elementsMode) {
+                Point originalPoint = new Point((int)(e.getX() / scale), (int)(e.getY() / scale));
+
                 // Проверяем, не нажали ли мы на существующую окружность
                 for (int i = circles.size() - 1; i >= 0; i--) {
                     Circle circle = circles.get(i);
-                    if (circle.center.distance(e.getPoint()) <= circle.radius) {
+                    if (circle.center.distance(originalPoint) <= circle.radius) {
                         draggedCircle = circle;
-                        dragOffset = new Point(e.getX() - circle.center.x, e.getY() - circle.center.y);
+                        dragOffset = new Point(originalPoint.x - circle.center.x, originalPoint.y - circle.center.y);
                         return;
                     }
                 }
 
-                // Если не нажали на существующую окружность, создаем новую
-                circles.add(new Circle(e.getPoint(), circleRadius, nextCircleNumber++));
+                // Создаем новую точку с оригинальными координатами
+                Circle newCircle = new Circle(originalPoint, circleRadius, nextCircleNumber++);
+                circles.add(newCircle);
+                originalCircles.add(new Circle(new Point(originalPoint), circleRadius, newCircle.number));
                 updateBSpline();
                 repaint();
             }
@@ -424,9 +492,18 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
     @Override
     public void mouseDragged(MouseEvent e) {
         if (draggedCircle != null) {
-            // Перемещаем окружность с учетом смещения (чтобы не прыгала к курсору)
-            draggedCircle.center.x = e.getX() - dragOffset.x;
-            draggedCircle.center.y = e.getY() - dragOffset.y;
+            Point originalPoint = new Point((int)(e.getX() / scale), (int)(e.getY() / scale));
+            draggedCircle.center.x = originalPoint.x - dragOffset.x;
+            draggedCircle.center.y = originalPoint.y - dragOffset.y;
+
+            // Обновляем оригинальные координаты
+            for (int i = 0; i < circles.size(); i++) {
+                if (circles.get(i) == draggedCircle) {
+                    originalCircles.get(i).center.setLocation(draggedCircle.center);
+                    break;
+                }
+            }
+
             updateBSpline();
             repaint();
         }

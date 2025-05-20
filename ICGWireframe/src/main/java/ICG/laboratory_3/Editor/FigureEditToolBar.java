@@ -215,22 +215,19 @@ public class FigureEditToolBar extends JToolBar {
         });
         row.add(ApplyBtn);
 
-        JCheckBox checkBox = new JCheckBox("Auto change");
-        row.add(checkBox);
+        row.add(new JLabel(""));
 
-        JButton NormalizeBtn = new JButton("Normalize");
-        NormalizeBtn.setPreferredSize(btnDimension);
-        NormalizeBtn.setMinimumSize(btnDimension);
-        NormalizeBtn.setMaximumSize(btnDimension);
-        row.add(NormalizeBtn);
+        row.add(new JLabel(""));
 
         JButton ZoomPlusBtn = new JButton("Zoom +");
+        ZoomPlusBtn.addActionListener(e -> figureEditPanel.zoomIn());
         ZoomPlusBtn.setPreferredSize(btnDimension);
         ZoomPlusBtn.setMinimumSize(btnDimension);
         ZoomPlusBtn.setMaximumSize(btnDimension);
         row.add(ZoomPlusBtn);
 
         JButton ZoomMinusBtn = new JButton("Zoom -");
+        ZoomMinusBtn.addActionListener(e -> figureEditPanel.zoomOut());
         ZoomMinusBtn.setPreferredSize(btnDimension);
         ZoomMinusBtn.setMinimumSize(btnDimension);
         ZoomMinusBtn.setMaximumSize(btnDimension);
