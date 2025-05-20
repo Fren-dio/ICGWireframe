@@ -48,6 +48,14 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
     private static final double ZOOM_FACTOR = 0.1; // 10% увеличение/уменьшение
     private ArrayList<Circle> originalCircles = new ArrayList<>(); // Храним оригинальные координаты
 
+
+
+    private Point translation = new Point(0, 0); // Для перемещения изображения
+    private Point lastDragPoint; // Для отслеживания перемещения мыши
+    private static final int PAN_SPEED = 10; // Скорость перемещения стрелками
+    private Point gridOffset = new Point(0, 0);
+
+
     public FigureEditPanel(JScrollPane scrollPane, FigureEditWindow figureEditWindow) {
         this.scrollPane = scrollPane;
         this.figureEditWindow = figureEditWindow;
@@ -65,6 +73,44 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
 
         saveOriginalCoordinates();
     }
+
+
+    public void normalizeCoordinates() {
+        if (circles.isEmpty()) return;
+
+        // Находим минимальные и максимальные координаты
+        int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
+
+        for (Circle circle : circles) {
+            Point p = circle.center;
+            minX = Math.min(minX, p.x);
+            minY = Math.min(minY, p.y);
+            maxX = Math.max(maxX, p.x);
+            maxY = Math.max(maxY, p.y);
+        }
+
+        // Вычисляем центр фигуры
+        int centerX = (minX + maxX) / 2;
+        int centerY = (minY + maxY) / 2;
+
+        // Вычисляем смещение к центру панели
+        int panelCenterX = getWidth() / 2;
+        int panelCenterY = getHeight() / 2;
+        int dx = panelCenterX - centerX;
+        int dy = panelCenterY - centerY;
+
+        // Применяем смещение ко всем точкам
+        for (Circle circle : circles) {
+            circle.center.translate(dx, dy);
+        }
+
+        // Обновляем оригинальные координаты
+        saveOriginalCoordinates();
+        updateBSpline();
+        repaint();
+    }
+
 
     private void saveOriginalCoordinates() {
         originalCircles.clear();
@@ -91,6 +137,7 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
 
     private void applyZoom() {
         // Восстанавливаем оригинальные координаты
+        translation.setLocation(0, 0);
         for (int i = 0; i < originalCircles.size(); i++) {
             circles.get(i).center.setLocation(originalCircles.get(i).center);
         }
@@ -120,18 +167,13 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
         g2d.setBackground(backgroundColor);
         g2d.clearRect(0, 0, getWidth(), getHeight());
 
-        // Применяем масштабирование
+        g2d.translate(translation.x, translation.y);
         g2d.scale(scale, scale);
 
-        int imageWidth = (int)(getWidth() / scale);
-        int imageHeight = (int)(getHeight() / scale);
-        int horizontalSteps = 20;
-        int horizontalStepSize = (int)(imageWidth/horizontalSteps);
-        int verticalStepSize = horizontalStepSize;
-        int verticalSteps = (int)(imageHeight/horizontalSteps);
+        int gridTranslateX = (int)(translation.x / scale);
+        int gridTranslateY = (int)(translation.y / scale);
 
-        drawLinesOnGrid(g2d, imageWidth, imageHeight, horizontalStepSize, verticalStepSize);
-        drawLinesForSteps(g2d, imageWidth, imageHeight, horizontalStepSize, verticalStepSize);
+        drawBackgroundAndGrid(g2d, gridTranslateX, gridTranslateY);
 
         drawCircles(g2d);
         drawLines(g2d);
@@ -139,6 +181,107 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
         drawBSpline(g2d);
 
         g2d.dispose();
+    }
+
+
+    private void drawBackgroundAndGrid(Graphics2D g2d, int gridTranslateX, int gridTranslateY) {
+        g2d.setColor(backgroundColor);
+        g2d.fillRect(0, 0, getWidth(), getHeight());
+
+        int imageWidth = (int)(getWidth() / scale);
+        int imageHeight = (int)(getHeight() / scale);
+        int horizontalSteps = 20;
+        int horizontalStepSize = (int)(imageWidth/horizontalSteps);
+        int verticalStepSize = horizontalStepSize;
+
+        int centerX = imageWidth/2 - gridTranslateX;
+        int centerY = imageHeight/2 - gridTranslateY;
+
+        drawGridLines(g2d, imageWidth, imageHeight, horizontalStepSize, verticalStepSize,
+                centerX, centerY, gridTranslateX, gridTranslateY);
+
+        drawAxes(g2d, imageWidth, imageHeight, centerX, centerY);
+    }
+
+
+    private void drawGridLines(Graphics2D g2d, int imageWidth, int imageHeight,
+                               int horizontalStepSize, int verticalStepSize,
+                               int centerX, int centerY, int offsetX, int offsetY) {
+        g2d.setColor(gridsLineColor);
+
+        // Получаем видимую область с учетом масштаба и перемещения
+        Rectangle visibleRect = getVisibleRect();
+        int visibleWidth = (int)(visibleRect.width / scale);
+        int visibleHeight = (int)(visibleRect.height / scale);
+        int visibleX = (int)(-translation.x / scale);
+        int visibleY = (int)(-translation.y / scale);
+
+        // Рассчитываем начальные позиции для линий сетки
+        int startX = (visibleX / horizontalStepSize) * horizontalStepSize;
+        int startY = (visibleY / verticalStepSize) * verticalStepSize;
+
+        // Рисуем горизонтальные линии (ось Y) по всей видимой области
+        //for (int y = startY; y < startY + visibleHeight + verticalStepSize; y += verticalStepSize) {
+        //    int screenY = y - offsetY;
+        //    g2d.drawLine(visibleX, screenY, visibleX + visibleWidth, screenY);
+        //}
+        int tickSize = 10;
+        int step = 50; // Шаг делений
+        int startYTick = (visibleY / step) * step;
+        for (int y = -10*(visibleY + visibleHeight)/step; y < 10*(visibleY + visibleHeight)/step; y += 1) {
+            g2d.drawLine(imageWidth/2 - 10*imageWidth, imageHeight/2+y*step, imageWidth/2 + 10*imageWidth, imageHeight/2+y*step);
+        }
+
+        // Рисуем вертикальные линии (ось X) по всей видимой области
+        int startXTick = (visibleX / step) * step;
+        for (int x = -10*(visibleX + visibleWidth)/step; x < 10*(visibleX + visibleWidth)/step; x += 1) {
+            g2d.drawLine(imageWidth/2+x*step, imageHeight/2 - 10*imageHeight, imageWidth/2+x*step, imageHeight/2 + 10*imageHeight);
+        }
+    }
+
+
+    private void drawAxes(Graphics2D g2d, int imageWidth, int imageHeight, int centerX, int centerY) {
+        g2d.setColor(mainLineColor);
+        g2d.setStroke(new BasicStroke(3));
+
+        // Получаем видимую область
+        Rectangle visibleRect = getVisibleRect();
+        int visibleX = (int)(-translation.x / scale);
+        int visibleY = (int)(-translation.y / scale);
+        int visibleWidth = (int)(visibleRect.width / scale);
+        int visibleHeight = (int)(visibleRect.height / scale);
+
+        // Ось Y (вертикальная) - рисуем на всю видимую высоту
+        int axisY = centerX;
+        g2d.drawLine(imageWidth/2, visibleY, imageWidth/2, visibleY + visibleHeight);
+
+        // Ось X (горизонтальная) - рисуем на всю видимую ширину
+        int axisX = centerY;
+        g2d.drawLine(visibleX, imageHeight/2, visibleX + visibleWidth, imageHeight/2);
+
+        // Деления на осях (только в видимой области)
+        drawAxisTicks(g2d, visibleX, visibleY, imageWidth, imageHeight, visibleWidth, visibleHeight, centerX, centerY);
+    }
+
+    // Обновленный метод для делений на осях
+    private void drawAxisTicks(Graphics2D g2d, int visibleX, int visibleY,
+                               int imageWidth, int imageHeight,
+                               int visibleWidth, int visibleHeight,
+                               int centerX, int centerY) {
+        int tickSize = 10;
+        int step = 50; // Шаг делений
+
+        // Деления на оси X (горизонтальной)
+        int startXTick = (visibleX / step) * step;
+        for (int x = startXTick; x < visibleX + visibleWidth; x += step) {
+            g2d.drawLine(x, imageHeight/2 - tickSize/2, x, imageHeight/2 + tickSize/2);
+        }
+
+        // Деления на оси Y (вертикальной)
+        int startYTick = (visibleY / step) * step;
+        for (int y = startYTick; y < visibleY + visibleHeight; y += step) {
+            g2d.drawLine(imageWidth/2 - tickSize/2, y, imageWidth/2 + tickSize/2, y);
+        }
     }
 
 
@@ -452,7 +595,12 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if (e.getButton() == MouseEvent.BUTTON1) {
+        if (SwingUtilities.isMiddleMouseButton(e)) {
+            // Средняя кнопка мыши - перемещение
+            lastDragPoint = e.getPoint();
+            return;
+        }
+        else if (e.getButton() == MouseEvent.BUTTON1) {
             if (this.elementsMode) {
                 Point originalPoint = new Point((int)(e.getX() / scale), (int)(e.getY() / scale));
 
@@ -491,7 +639,20 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        if (draggedCircle != null) {
+        if (SwingUtilities.isMiddleMouseButton(e) && lastDragPoint != null) {
+            Point currentPoint = e.getPoint();
+            int dx = currentPoint.x - lastDragPoint.x;
+            int dy = currentPoint.y - lastDragPoint.y;
+
+            translation.translate(dx, dy);
+            lastDragPoint = currentPoint;
+
+            // Обновляем смещение сетки
+            gridOffset.translate(dx, dy);
+            repaint();
+            return;
+        }
+        else if (draggedCircle != null) {
             Point originalPoint = new Point((int)(e.getX() / scale), (int)(e.getY() / scale));
             draggedCircle.center.x = originalPoint.x - dragOffset.x;
             draggedCircle.center.y = originalPoint.y - dragOffset.y;

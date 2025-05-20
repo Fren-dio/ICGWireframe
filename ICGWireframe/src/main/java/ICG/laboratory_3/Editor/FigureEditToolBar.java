@@ -215,9 +215,19 @@ public class FigureEditToolBar extends JToolBar {
         });
         row.add(ApplyBtn);
 
-        row.add(new JLabel(""));
+        JButton NormalizeBtn = new JButton("Normalize");
+        NormalizeBtn.addActionListener(e -> figureEditPanel.normalizeCoordinates());
+        NormalizeBtn.setPreferredSize(btnDimension);
+        NormalizeBtn.setMinimumSize(btnDimension);
+        NormalizeBtn.setMaximumSize(btnDimension);
+        row.add(NormalizeBtn);
 
-        row.add(new JLabel(""));
+        JButton ZoomReset = new JButton("Zoom reset");
+        ZoomReset.addActionListener(e -> figureEditPanel.resetZoom());
+        ZoomReset.setPreferredSize(btnDimension);
+        ZoomReset.setMinimumSize(btnDimension);
+        ZoomReset.setMaximumSize(btnDimension);
+        row.add(ZoomReset);
 
         JButton ZoomPlusBtn = new JButton("Zoom +");
         ZoomPlusBtn.addActionListener(e -> figureEditPanel.zoomIn());
