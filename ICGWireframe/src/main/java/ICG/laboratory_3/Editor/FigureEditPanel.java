@@ -121,11 +121,13 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
 
     // Методы для масштабирования
     public void zoomIn() {
+        translation.setLocation(0, 0);
         scale += ZOOM_FACTOR;
         applyZoom();
     }
 
     public void zoomOut() {
+        translation.setLocation(0, 0);
         scale = Math.max(0.1, scale - ZOOM_FACTOR); // Минимальный масштаб 10%
         applyZoom();
     }
@@ -150,8 +152,11 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
         repaint();
     }
 
-    private Point getOriginalPoint(Point scaledPoint) {
-        return new Point((int)(scaledPoint.x / scale), (int)(scaledPoint.y / scale));
+    private Point getOriginalPoint(Point mousePoint) {
+        return new Point(
+                (int)((mousePoint.x - translation.x) / scale),
+                (int)((mousePoint.y - translation.y) / scale)
+        );
     }
 
     @Override
@@ -268,19 +273,19 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
                                int imageWidth, int imageHeight,
                                int visibleWidth, int visibleHeight,
                                int centerX, int centerY) {
+
+
         int tickSize = 10;
         int step = 50; // Шаг делений
-
-        // Деления на оси X (горизонтальной)
-        int startXTick = (visibleX / step) * step;
-        for (int x = startXTick; x < visibleX + visibleWidth; x += step) {
-            g2d.drawLine(x, imageHeight/2 - tickSize/2, x, imageHeight/2 + tickSize/2);
+        int startYTick = (visibleY / step) * step;
+        for (int y = -10*(visibleY + visibleHeight)/step; y < 10*(visibleY + visibleHeight)/step; y += 1) {
+            g2d.drawLine(imageWidth/2 - tickSize/2, imageHeight/2+y*step, imageWidth/2 + tickSize/2, imageHeight/2+y*step);
         }
 
-        // Деления на оси Y (вертикальной)
-        int startYTick = (visibleY / step) * step;
-        for (int y = startYTick; y < visibleY + visibleHeight; y += step) {
-            g2d.drawLine(imageWidth/2 - tickSize/2, y, imageWidth/2 + tickSize/2, y);
+        // Рисуем вертикальные линии (ось X) по всей видимой области
+        int startXTick = (visibleX / step) * step;
+        for (int x = -10*(visibleX + visibleWidth)/step; x < 10*(visibleX + visibleWidth)/step; x += 1) {
+            g2d.drawLine(imageWidth/2+x*step, imageHeight/2 - tickSize/2, imageWidth/2+x*step, imageHeight/2 + tickSize/2);
         }
     }
 
@@ -596,25 +601,27 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
     @Override
     public void mousePressed(MouseEvent e) {
         if (SwingUtilities.isMiddleMouseButton(e)) {
-            // Средняя кнопка мыши - перемещение
             lastDragPoint = e.getPoint();
             return;
         }
         else if (e.getButton() == MouseEvent.BUTTON1) {
             if (this.elementsMode) {
-                Point originalPoint = new Point((int)(e.getX() / scale), (int)(e.getY() / scale));
+                Point originalPoint = getOriginalPoint(e.getPoint());
 
-                // Проверяем, не нажали ли мы на существующую окружность
+                // Проверка нажатия на существующую окружность
                 for (int i = circles.size() - 1; i >= 0; i--) {
                     Circle circle = circles.get(i);
                     if (circle.center.distance(originalPoint) <= circle.radius) {
                         draggedCircle = circle;
-                        dragOffset = new Point(originalPoint.x - circle.center.x, originalPoint.y - circle.center.y);
+                        dragOffset = new Point(
+                                originalPoint.x - circle.center.x,
+                                originalPoint.y - circle.center.y
+                        );
                         return;
                     }
                 }
 
-                // Создаем новую точку с оригинальными координатами
+                // Создание новой окружности
                 Circle newCircle = new Circle(originalPoint, circleRadius, nextCircleNumber++);
                 circles.add(newCircle);
                 originalCircles.add(new Circle(new Point(originalPoint), circleRadius, newCircle.number));
@@ -622,12 +629,13 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
                 repaint();
             }
         }
-        else if (e.getButton() == MouseEvent.BUTTON3) { // Правая кнопка мыши
+        else if (e.getButton() == MouseEvent.BUTTON3) {
+            Point originalPoint = getOriginalPoint(e.getPoint());
             for (int i = circles.size() - 1; i >= 0; i--) {
                 Circle circle = circles.get(i);
-                if (circle.center.distance(e.getPoint()) <= circle.radius) {
+                if (circle.center.distance(originalPoint) <= circle.radius) {
                     circles.remove(i);
-                    // Перенумеровываем
+                    originalCircles.remove(i);
                     renumberCircles();
                     updateBSpline();
                     repaint();
@@ -646,14 +654,11 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
 
             translation.translate(dx, dy);
             lastDragPoint = currentPoint;
-
-            // Обновляем смещение сетки
-            gridOffset.translate(dx, dy);
             repaint();
             return;
         }
         else if (draggedCircle != null) {
-            Point originalPoint = new Point((int)(e.getX() / scale), (int)(e.getY() / scale));
+            Point originalPoint = getOriginalPoint(e.getPoint());
             draggedCircle.center.x = originalPoint.x - dragOffset.x;
             draggedCircle.center.y = originalPoint.y - dragOffset.y;
 
