@@ -34,7 +34,8 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
     private int BSplineBlue = 0;
     private int currentPointCount = 4;
     private int M = 10;
-    private int M1 = 4;
+    private int M1 = 1;
+    private int smooth = 1;
 
     private List<Point> bSplinePoints = new ArrayList<>();
     private int splineSegments = 1;
@@ -290,6 +291,46 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
     }
 
 
+    public int getM() {
+        return this.M;
+    }
+
+    public int getM1() {
+        return this.M1;
+    }
+    public int getN() {
+        return this.splineSegments;
+    }
+    public int getK() {
+        return this.currentPointCount;
+    }
+
+
+    public int getSmooth() {
+        return this.smooth;
+    }
+    public int getMainRed() {
+        return this.mainRed;
+    }
+    public int getMainGreen() {
+        return this.mainGreen;
+    }
+    public int getMainBlue() {
+        return this.mainBlue;
+    }
+    public int getBSplineRed() {
+        return this.BSplineRed;
+    }
+    public int getBSplineGreen() {
+        return this.BSplineGreen;
+    }
+    public int getBSplineBlue() {
+        return this.BSplineBlue;
+    }
+
+
+
+
     public List<Point> getInfoAboutBSplinePoints() {
         System.out.println( "\ngetInfoAboutBSplinePoints:");
         for (int i=0; i<bSplinePoints.size(); i++) {
@@ -319,12 +360,38 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
     }
 
 
+    ArrayList<Circle> getCircles() {
+        return this.circles;
+    }
+
+    void setCircles(ArrayList<Circle> circles, int radius, int number) {
+        this.circles = circles;
+        this.circleRadius = radius;
+        this.nextCircleNumber = number;
+
+        renumberCircles();
+        updateBSpline();
+        repaint();
+    }
+
+
     public void setM(int value) {
         this.M = value;
     }
 
     public void setM1(int value) {
         this.M1 = value;
+    }
+    public void setK(int value) {
+        this.currentPointCount = value;
+    }
+
+    public void setN(int value) {
+        this.splineSegments = value;
+    }
+
+    public void setSmooth(int value) {
+        this.smooth = value;
     }
 
     public void setPointsCount(int value) {
