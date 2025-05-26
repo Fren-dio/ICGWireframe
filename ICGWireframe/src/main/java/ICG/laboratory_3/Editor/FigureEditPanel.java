@@ -332,29 +332,24 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
 
 
     public List<Point> getInfoAboutBSplinePoints() {
-        //System.out.println( "\ngetInfoAboutBSplinePoints:");
-        //for (int i=0; i<bSplinePoints.size(); i++) {
-        //    System.out.println(bSplinePoints.get(i).x + " " + bSplinePoints.get(i).y);
-        //}
         List<Point> centeredPoints = new ArrayList<>();
 
-        // Получаем центр панели (координата X центральной оси)
+        // Центр панели (точка (0,0) в мировых координатах)
         int centerX = getWidth() / 2;
+        int centerY = getHeight() / 2;
 
-        // Преобразуем координаты относительно центральной оси
+        // Преобразуем координаты в мировую систему (центр — середина экрана)
         for (Point p : bSplinePoints) {
-            // Переводим в мировые координаты (учитывая масштаб)
-            int worldX = (int)(p.x / scale);
-            int worldY = (int)(p.y / scale);
+            // Учитываем масштаб и смещение
+            int worldX = (int)((p.x - translation.x) / scale);
+            int worldY = (int)((p.y - translation.y) / scale);
 
-            // Смещаем относительно центральной оси
-            centeredPoints.add(new Point(worldX - centerX, worldY));
+            // Центрируем относительно оси вращения (OY → OZ в 3D)
+            int radius = worldX - centerX;  // Расстояние от вертикальной оси (радиус в 3D)
+            int height = centerY - worldY;  // Высота (инвертируем Y, чтобы ось OY смотрела вверх)
+
+            centeredPoints.add(new Point(radius, height));
         }
-
-        //System.out.println("\nCentered BSpline points (relative to coordinate axis):");
-        //for (Point p : centeredPoints) {
-        //    System.out.println(p.x + " " + p.y);
-        //}
 
         return centeredPoints;
     }
@@ -477,18 +472,11 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
         double offsetY = (windowHeight / 2) - (max_Y / 2);
 
         // Основание вазы (дно → начало расширения)
-        circles.add(new Circle(new Point((int) (342), (int) (28)), circleRadius, nextCircleNumber++));
-        circles.add(new Circle(new Point((int) (202), (int) (54)), circleRadius, nextCircleNumber++));
-        circles.add(new Circle(new Point((int) (246), (int) (131)), circleRadius, nextCircleNumber++));
-        circles.add(new Circle(new Point((int) (474), (int) (134)), circleRadius, nextCircleNumber++));
-        circles.add(new Circle(new Point((int) (320), (int) (278)), circleRadius, nextCircleNumber++));
-        circles.add(new Circle(new Point((int) (456), (int) (308)), circleRadius, nextCircleNumber++));
-        circles.add(new Circle(new Point((int) (630), (int) (327)), circleRadius, nextCircleNumber++));
-        circles.add(new Circle(new Point((int) (630), (int) (490)), circleRadius, nextCircleNumber++));
-        circles.add(new Circle(new Point((int) (630), (int) (490)), circleRadius, nextCircleNumber++));
-        circles.add(new Circle(new Point((int) (620), (int) (520)), circleRadius, nextCircleNumber++));
-        circles.add(new Circle(new Point((int) (600), (int) (520)), circleRadius, nextCircleNumber++));
-        circles.add(new Circle(new Point((int) (580), (int) (520)), circleRadius, nextCircleNumber++));
+        circles.add(new Circle(new Point((int) (300), (int) (100)), circleRadius, nextCircleNumber++));
+        circles.add(new Circle(new Point((int) (300), (int) (200)), circleRadius, nextCircleNumber++));
+        circles.add(new Circle(new Point((int) (300), (int) (300)), circleRadius, nextCircleNumber++));
+        circles.add(new Circle(new Point((int) (300), (int) (400)), circleRadius, nextCircleNumber++));
+        circles.add(new Circle(new Point((int) (300), (int) (500)), circleRadius, nextCircleNumber++));
 
         updateBSpline();
         repaint();
@@ -512,7 +500,7 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
         if (bSplinePoints.size() < 2 || !showBSpline) return;
 
         g2d.setColor(new Color(BSplineRed, BSplineGreen, BSplineBlue));
-        g2d.setStroke(new BasicStroke(2));
+        g2d.setStroke(new BasicStroke(5));
 
         Point prev = bSplinePoints.get(0);
         for (int i = 1; i < bSplinePoints.size(); i++) {
