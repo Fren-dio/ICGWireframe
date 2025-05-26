@@ -111,16 +111,18 @@ public class FigureEditToolBar extends JToolBar {
     }
 
     void addRow2(JPanel row) {
-        // число отрезков по окружностям между соседними образующими (≥ 1).
-        row.add(new JLabel("M1:"));
-        JSpinner M1 = new JSpinner(new SpinnerNumberModel(1, 1, 100, 1));
-        M1.addChangeListener(new ChangeListener() {
+
+        row.add(new JLabel("Smooth:"));
+        JSpinner Smooth = new JSpinner(new SpinnerNumberModel(1, 1, 100, 1));
+        Smooth.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
-                figureEditPanel.setM1((Integer) M1.getValue());
+                figureEditPanel.setSmooth((Integer) Smooth.getValue());
             }
         });
-        row.add(M1);
+        row.add(Smooth);
+
+
         // число образующих
         row.add(new JLabel("M:"));
         JSpinner M = new JSpinner(new SpinnerNumberModel(10, 2, 100, 1));
@@ -163,15 +165,8 @@ public class FigureEditToolBar extends JToolBar {
 
         row.add(new JLabel(""));
         row.add(new JLabel(""));
-        row.add(new JLabel("Smooth:"));
-        JSpinner Smooth = new JSpinner(new SpinnerNumberModel(1, 1, 100, 1));
-        Smooth.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                figureEditPanel.setSmooth((Integer) Smooth.getValue());
-            }
-        });
-        row.add(Smooth);
+        row.add(new JLabel(""));
+        row.add(new JLabel(""));
 
         row.add(new JLabel("Main color blue:"));
         JSpinner colorBlue = new JSpinner(new SpinnerNumberModel(255, 0, 255, 1));
@@ -211,6 +206,7 @@ public class FigureEditToolBar extends JToolBar {
         OKBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                editWindow.setbSplinePoints(figureEditPanel.getInfoAboutBSplinePoints());
                 editWindow.setVisible(false);
             }
         });

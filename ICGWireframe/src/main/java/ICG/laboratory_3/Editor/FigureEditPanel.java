@@ -332,10 +332,10 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
 
 
     public List<Point> getInfoAboutBSplinePoints() {
-        System.out.println( "\ngetInfoAboutBSplinePoints:");
-        for (int i=0; i<bSplinePoints.size(); i++) {
-            System.out.println(bSplinePoints.get(i).x + " " + bSplinePoints.get(i).y);
-        }
+        //System.out.println( "\ngetInfoAboutBSplinePoints:");
+        //for (int i=0; i<bSplinePoints.size(); i++) {
+        //    System.out.println(bSplinePoints.get(i).x + " " + bSplinePoints.get(i).y);
+        //}
         List<Point> centeredPoints = new ArrayList<>();
 
         // Получаем центр панели (координата X центральной оси)
@@ -351,10 +351,10 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
             centeredPoints.add(new Point(worldX - centerX, worldY));
         }
 
-        System.out.println("\nCentered BSpline points (relative to coordinate axis):");
-        for (Point p : centeredPoints) {
-            System.out.println(p.x + " " + p.y);
-        }
+        //System.out.println("\nCentered BSpline points (relative to coordinate axis):");
+        //for (Point p : centeredPoints) {
+        //    System.out.println(p.x + " " + p.y);
+        //}
 
         return centeredPoints;
     }
@@ -489,7 +489,6 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
         circles.add(new Circle(new Point((int) (620), (int) (520)), circleRadius, nextCircleNumber++));
         circles.add(new Circle(new Point((int) (600), (int) (520)), circleRadius, nextCircleNumber++));
         circles.add(new Circle(new Point((int) (580), (int) (520)), circleRadius, nextCircleNumber++));
-
 
         updateBSpline();
         repaint();

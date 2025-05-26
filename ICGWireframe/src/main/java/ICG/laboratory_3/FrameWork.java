@@ -214,6 +214,8 @@ public class FrameWork extends JFrame {
             }
             setCircles(this.circles, radius, number);
 
+            imagePanel.rotateOXYZ();
+            imagePanel.resetZoom();
             imagePanel.repaint();
 
             JOptionPane.showMessageDialog(this, "Success loaded", "Load", JOptionPane.INFORMATION_MESSAGE);
