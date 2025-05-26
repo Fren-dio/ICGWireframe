@@ -30,6 +30,7 @@ public class ImagePanel extends JPanel implements MouseListener, MouseMotionList
     // Параметры фигуры
     private List<Point> bSplinePoints = new ArrayList<>();
     private int N = 10;
+    private int K = 2;
     private int M = 10; // Количество образующих
     private int M1 = 1; // Число отрезков между образующими
     private int smooth = 1; // сглаживание
@@ -56,6 +57,7 @@ public class ImagePanel extends JPanel implements MouseListener, MouseMotionList
                 RenderingHints.VALUE_ANTIALIAS_ON);
 
         this.N = frameWork.getN();
+        this.K = Math.max(2, 2 + (bSplinePoints.size()-2)/2);
         this.M = frameWork.getM();
         this.M1 = frameWork.getM1();
 
@@ -89,8 +91,8 @@ public class ImagePanel extends JPanel implements MouseListener, MouseMotionList
     }
 
     public void rotateOXYZ() {
-        this.rotationX = Math.PI/4;
-        this.rotationY = -Math.PI/4;
+        this.rotationX = -Math.PI/4;
+        this.rotationY = Math.PI/4;
         repaint();
     }
 
@@ -133,6 +135,7 @@ public class ImagePanel extends JPanel implements MouseListener, MouseMotionList
         bSplinePoints = new ArrayList<>();
         bSplinePoints = frameWork.getInfoAboutBSplinePoints();
         this.N = frameWork.getN();
+        this.K = Math.max(2, 2 + (bSplinePoints.size()-2)/2);
         this.M = frameWork.getM();
         this.M1 = frameWork.getM1();
         this.smooth = frameWork.getSmooth();
@@ -145,6 +148,7 @@ public class ImagePanel extends JPanel implements MouseListener, MouseMotionList
 
         List<Point2D.Double> generatrixPoints = generateBSplinePoints();
         List<List<Point3D>> surfacePoints = createSurfacePoints(generatrixPoints);
+        this.K = Math.max(2, 2 + (bSplinePoints.size()-2)/2);
 
         // Определяем границы фигуры
         double minX = Double.MAX_VALUE, maxX = -Double.MAX_VALUE;
@@ -215,67 +219,87 @@ public class ImagePanel extends JPanel implements MouseListener, MouseMotionList
     }
 
 
-    private void drawConnectingCircles(Graphics2D g2d, List<List<Point3D>> surfacePointsForCircles,
-                                       double centerX, double centerY, double centerZ, double scale,
-                                       double minDistance, double maxDistance) {
-        int panelCenterX = getWidth() / 2;
-        int panelCenterY = getHeight() / 2;
-
-        // Проходим по каждому уровню высоты (по Z)
-        int levels = surfacePointsForCircles.get(0).size();
-
-        for (int level = 0; level < levels; level+=N) {
-            List<Point3D> circlePoints = new ArrayList<>();
-
-            for (List<Point3D> generatrix : surfacePointsForCircles) {
-                if (level < generatrix.size()) {
-                    circlePoints.add(generatrix.get(level));
-                }
-            }
-
-            if (circlePoints.size() >= 2) {
-                circlePoints.add(circlePoints.get(0));
-
-                Point3D prevPoint = circlePoints.get(0);
-                int prevX = (int)((prevPoint.x - centerX) * scale + panelCenterX);
-                int prevY = (int)(panelCenterY - (prevPoint.y - centerY) * scale);
-
-                for (int i = 1; i < circlePoints.size(); i++) {
-                    Point3D currentPoint = circlePoints.get(i);
-                    int currX = (int)((currentPoint.x - centerX) * scale + panelCenterX);
-                    int currY = (int)(panelCenterY - (currentPoint.y - centerY) * scale);
-
-                    g2d.setColor(getCalibratedDistanceColor(prevPoint, currentPoint, minDistance, maxDistance));
-                    g2d.drawLine(prevX, prevY, currX, currY);
-
-                    prevX = currX;
-                    prevY = currY;
-                    prevPoint = currentPoint;
-                }
-            }
-        }
-    }
-
     private List<List<Point3D>> createSurfacePointsForCircles(List<Point2D.Double> generatrixPoints) {
         List<List<Point3D>> surfacePoints = new ArrayList<>();
-        // Общее количество точек с учетом сглаживания
-        int totalPoints = M * smooth;
-        System.out.println(M +" " + smooth + "\n");
 
+        if (generatrixPoints == null || generatrixPoints.size() < 2 || K <= 0) {
+            return surfacePoints;
+        }
+        System.out.println("K = " + K);
+        System.out.println("bSplinePoints.size() = " + bSplinePoints.size());
+        System.out.println("surfacePoints.size() = " + generatrixPoints.size());
+
+        int totalPoints = Math.max(M * smooth, 1);
+        double angleStep = 2 * Math.PI / totalPoints;
+
+        // Собираем все Z-координаты из сплайна
+        List<Double> zLevels = new ArrayList<>();
+        for (Point2D.Double p : generatrixPoints) {
+            zLevels.add(p.y);
+        }
+
+        // Вычисляем общую длину сплайна по Z
+        double totalLength = 0;
+        for (int i = 1; i < zLevels.size(); i++) {
+            totalLength += Math.abs(zLevels.get(i) - zLevels.get(i-1));
+        }
+
+        // Вычисляем желаемые Z-координаты для K окружностей
+        List<Double> targetZLevels = new ArrayList<>();
+        if (K == 1) {
+            targetZLevels.add(zLevels.get(0));
+        } else {
+            double step = totalLength / (K - 1);
+            double accumulated = 0;
+            int currentSegment = 0;
+
+            targetZLevels.add(zLevels.get(0));
+
+            for (int k = 1; k < K - 1; k++) {
+                double targetDist = k * step;
+
+                while (currentSegment < zLevels.size() - 1) {
+                    double segmentLength = Math.abs(zLevels.get(currentSegment + 1) - zLevels.get(currentSegment));
+
+                    if (accumulated + segmentLength >= targetDist) {
+                        double t = (targetDist - accumulated) / segmentLength;
+                        double z = zLevels.get(currentSegment) +
+                                t * (zLevels.get(currentSegment + 1) - zLevels.get(currentSegment));
+                        targetZLevels.add(z);
+                        break;
+                    } else {
+                        accumulated += segmentLength;
+                        currentSegment++;
+                    }
+                }
+            }
+
+            targetZLevels.add(zLevels.get(zLevels.size() - 1));
+        }
+
+        // Создаем окружности на вычисленных Z-уровнях
         for (int j = 0; j < totalPoints; j++) {
-            double angle = Math.toRadians(j * 360.0 / totalPoints);
+            double angle = j * angleStep;
             List<Point3D> generatrix3D = new ArrayList<>();
 
-            for (Point2D.Double p : generatrixPoints) {
-                double radius = p.x;
-                double height = p.y;
+            for (double z : targetZLevels) {
+                // Находим радиус для текущего Z
+                double radius = 0;
+                for (int i = 0; i < generatrixPoints.size() - 1; i++) {
+                    Point2D.Double p1 = generatrixPoints.get(i);
+                    Point2D.Double p2 = generatrixPoints.get(i + 1);
 
-                // Стандартное преобразование в 3D
+                    if ((z >= p1.y && z <= p2.y) || (z <= p1.y && z >= p2.y)) {
+                        double t = (z - p1.y) / (p2.y - p1.y);
+                        radius = p1.x + t * (p2.x - p1.x);
+                        break;
+                    }
+                }
+
                 double x = radius * Math.cos(angle);
                 double y = radius * Math.sin(angle);
-                double z = height;
 
-                // Вращения (если нужны)
+                // Применяем вращение
                 double tempX = x * Math.cos(rotationY) + z * Math.sin(rotationY);
                 double tempZ = -x * Math.sin(rotationY) + z * Math.cos(rotationY);
                 x = tempX;
@@ -292,6 +316,51 @@ public class ImagePanel extends JPanel implements MouseListener, MouseMotionList
         }
 
         return surfacePoints;
+    }
+
+    private void drawConnectingCircles(Graphics2D g2d, List<List<Point3D>> surfacePointsForCircles,
+                                       double centerX, double centerY, double centerZ, double scale,
+                                       double minDistance, double maxDistance) {
+        int panelCenterX = getWidth() / 2;
+        int panelCenterY = getHeight() / 2;
+
+        if (surfacePointsForCircles.isEmpty()) return;
+
+        // Рисуем K окружностей
+        for (int circleIdx = 0; circleIdx < K; circleIdx++) {
+            Point3D prevPoint = null;
+            Point3D firstPoint = null;
+
+            for (List<Point3D> generatrix : surfacePointsForCircles) {
+                if (circleIdx < generatrix.size()) {
+                    Point3D currentPoint = generatrix.get(circleIdx);
+                    int currX = (int)((currentPoint.x - centerX) * scale + panelCenterX);
+                    int currY = (int)(panelCenterY - (currentPoint.y - centerY) * scale);
+
+                    if (prevPoint != null) {
+                        int prevX = (int)((prevPoint.x - centerX) * scale + panelCenterX);
+                        int prevY = (int)(panelCenterY - (prevPoint.y - centerY) * scale);
+
+                        g2d.setColor(getCalibratedDistanceColor(prevPoint, currentPoint, minDistance, maxDistance));
+                        g2d.drawLine(prevX, prevY, currX, currY);
+                    } else {
+                        firstPoint = currentPoint;
+                    }
+                    prevPoint = currentPoint;
+                }
+            }
+
+            // Замыкаем окружность
+            if (firstPoint != null && prevPoint != null) {
+                int firstX = (int)((firstPoint.x - centerX) * scale + panelCenterX);
+                int firstY = (int)(panelCenterY - (firstPoint.y - centerY) * scale);
+                int prevX = (int)((prevPoint.x - centerX) * scale + panelCenterX);
+                int prevY = (int)(panelCenterY - (prevPoint.y - centerY) * scale);
+
+                g2d.setColor(getCalibratedDistanceColor(firstPoint, prevPoint, minDistance, maxDistance));
+                g2d.drawLine(prevX, prevY, firstX, firstY);
+            }
+        }
     }
 
     private Color getCalibratedDistanceColor(Point3D p1, Point3D p2, double minDist, double maxDist) {

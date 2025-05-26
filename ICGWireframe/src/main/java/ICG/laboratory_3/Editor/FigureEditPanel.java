@@ -474,7 +474,6 @@ public class FigureEditPanel extends JPanel implements MouseListener, MouseMotio
         // Основание вазы (дно → начало расширения)
         circles.add(new Circle(new Point((int) (300), (int) (100)), circleRadius, nextCircleNumber++));
         circles.add(new Circle(new Point((int) (300), (int) (200)), circleRadius, nextCircleNumber++));
-        circles.add(new Circle(new Point((int) (300), (int) (300)), circleRadius, nextCircleNumber++));
         circles.add(new Circle(new Point((int) (300), (int) (400)), circleRadius, nextCircleNumber++));
         circles.add(new Circle(new Point((int) (300), (int) (500)), circleRadius, nextCircleNumber++));
 
